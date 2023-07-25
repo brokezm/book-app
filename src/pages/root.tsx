@@ -1,22 +1,25 @@
 import { useEffect, useState } from "react";
+import { useDebounce } from "../common/useDebounce";
 
 type Book = {
   title: string;
+  author_name: string;
+  type: string;
 };
 
-function useDebounce(value: unknown, when = 5000) {
-  const [debouncedValue, setDebouncedValue] = useState<unknown>(value);
+// function useDebounce(value: unknown, when = 500) {
+//   const [debouncedValue, setDebouncedValue] = useState<unknown>(value);
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setDebouncedValue(value);
-    }, when);
+//   useEffect(() => {
+//     const timeout = setTimeout(() => {
+//       setDebouncedValue(value);
+//     }, when);
 
-    return () => clearTimeout(timeout);
-  }, [when, value]);
+//     return () => clearTimeout(timeout);
+//   }, [when, value]);
 
-  return debouncedValue || "";
-}
+//   return debouncedValue || "";
+// }
 
 function RootPage() {
   const [books, setBooks] = useState<Book[]>([]);
@@ -47,7 +50,12 @@ function RootPage() {
           setQuery(e.target.value);
         }}
       />
-      {books && books.map((book, i) => <h4 key={i}>{book.title}</h4>)}
+      {books &&
+        books.map((book, i) => (
+          <h4 key={i}>
+            {book.author_name} - {book.title}
+          </h4>
+        ))}
     </>
   );
 }
