@@ -1,25 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, ChangeEventHandler } from "react";
+
 import { useDebounce } from "../common/useDebounce";
-
-type Book = {
-  title: string;
-  author_name: string;
-  type: string;
-};
-
-// function useDebounce(value: unknown, when = 500) {
-//   const [debouncedValue, setDebouncedValue] = useState<unknown>(value);
-
-//   useEffect(() => {
-//     const timeout = setTimeout(() => {
-//       setDebouncedValue(value);
-//     }, when);
-
-//     return () => clearTimeout(timeout);
-//   }, [when, value]);
-
-//   return debouncedValue || "";
-// }
+import { Book } from "../types/Book";
 
 function RootPage() {
   const [books, setBooks] = useState<Book[]>([]);
@@ -27,33 +9,38 @@ function RootPage() {
 
   const debouncedQuery = useDebounce(query);
 
+  const queryChange: ChangeEventHandler<HTMLInputElement> = useCallback((e) => {
+    setQuery(e.target.value);
+  }, []);
+
   useEffect(() => {
-    fetch(
-      "https://openlibrary.org/search.json?" +
-        new URLSearchParams({
-          q: debouncedQuery as string,
-        })
-    )
-      .then((res) => res.json())
-      .then((data) => {
+    async function findBooks() {
+      try {
+        const response = await fetch(
+          "https://openlibrary.org/search.json?" +
+            new URLSearchParams({
+              q: debouncedQuery as string,
+            })
+        );
+        const data = await response.json();
         setBooks(data.docs);
-      })
-      .catch((e) => console.error(e));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    findBooks();
   }, [debouncedQuery]);
 
   return (
     <>
-      <input
-        type="text"
-        value={query}
-        onChange={(e) => {
-          setQuery(e.target.value);
-        }}
-      />
+      <input type="text" value={query} onChange={queryChange} />
       {books &&
         books.map((book, i) => (
           <h4 key={i}>
-            {book.author_name} - {book.title}
+            {book.author_name?.join(", ")} - {book.title} (
+            {book.first_publish_year}). ISBN:
+            {book.isbn ? book.isbn.slice(0, 1) : "Not provided"}
           </h4>
         ))}
     </>
